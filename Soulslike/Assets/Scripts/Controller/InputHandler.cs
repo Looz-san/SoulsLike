@@ -9,6 +9,7 @@ namespace SA {
 		bool a_input, b_input, x_input, y_input, rb_input, rt_input, lb_input, lt_input;
 		float rt_axis, lt_axis;
 		bool leftAxis_down, rightAxis_down;
+		bool gloryKillPressed;
 
 		float b_timer, rt_timer, lt_timer;
 
@@ -29,6 +30,7 @@ namespace SA {
 			delta = Time.deltaTime;
 			states.Tick (delta);
 			ResetInputNStates ();
+			if (Input.GetButtonDown("y_input")) gloryKillPressed = true;
 		}
 
 		void FixedUpdate () {
@@ -45,7 +47,7 @@ namespace SA {
 			a_input = Input.GetButton ("a_input");
 			b_input = Input.GetButton ("b_input");
 			x_input = Input.GetButton ("x_input");
-			y_input = Input.GetButtonDown ("y_input");
+			// y_input handled in Update
 			rt_input = Input.GetButton ("rt_input");
 			rt_axis = Input.GetAxis ("rt_input");
 			if (rt_axis != 0)
@@ -93,11 +95,8 @@ namespace SA {
 			states.rt = rt_input;
 			states.lb = lb_input;
 			states.lt = lt_input;
-
-			if (y_input) {
-				states.isTwoHanded = !states.isTwoHanded;
-				states.HandleTwoHanded ();
-			}
+			states.gloryKillInput = gloryKillPressed;
+			gloryKillPressed = false;
 
 			if (rightAxis_down) {
 				states.lockOn = !states.lockOn;

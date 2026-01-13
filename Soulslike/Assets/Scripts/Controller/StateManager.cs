@@ -28,8 +28,10 @@ namespace SA {
 		public bool canMove;
 		public bool isTwoHanded;
 		public bool usingItem;
-		[Header("Other")]
 		public EnemyTarget lockOnTarget;
+			public bool gloryKillInput;
+		public bool canGloryKill;
+		public EnemyTarget gloryKillTarget;
 		public Transform lockOnTransform;
 		public AnimationCurve roll_curve;
 		[HideInInspector]
@@ -90,11 +92,19 @@ namespace SA {
 			delta = d;
 			rigid.drag = (moveAmount > 0 || !onGround) ? 0 : 4;
 
-			usingItem = anim.GetBool ("interacting");
+			this.usingItem = anim.GetBool ("interacting");
 
 			DetectItemAction ();
 			DetectAction ();
-			inventoryManager.curWeapon.weaponModel.SetActive (!usingItem);
+			if (lockOn && lockOnTarget != null) {
+				canGloryKill = true;
+				gloryKillTarget = lockOnTarget;
+			} else {
+				canGloryKill = false;
+				gloryKillTarget = null;
+			}
+			CheckGloryKill ();
+			inventoryManager.curWeapon.weaponModel.SetActive (!this.usingItem);
 
 			if (inAction) {
 				anim.applyRootMotion = true;
@@ -115,7 +125,7 @@ namespace SA {
 
 //			a_hook.rm_muliplier = 1;
 			a_hook.CloseRoll ();
-			HangleRolls ();
+			HandleRolls ();
 
 			anim.applyRootMotion = false;
 
@@ -152,7 +162,7 @@ namespace SA {
 		}
 
 		public void DetectItemAction () {
-			if (!canMove || usingItem)
+			if (!canMove || this.usingItem)
 				return;
 			if (!itemInput)
 				return;
@@ -163,12 +173,12 @@ namespace SA {
 			if (string.IsNullOrEmpty (targetAnim))
 				return;
 
-			usingItem = true;
+			this.usingItem = true;
 			anim.Play (targetAnim);
 		}
 
 		public void DetectAction () {
-			if (!canMove || usingItem)
+			if (!canMove || this.usingItem)
 				return;
 			if (!rb && !rt && !lb && !lt)
 				return;
@@ -187,14 +197,36 @@ namespace SA {
 			anim.CrossFade (targetAnim, 0.2f);
 		}
 
+		public void CheckGloryKill () {
+			if (!gloryKillInput || !canGloryKill || gloryKillTarget == null)
+				return;
+			
+			// ตรวจสอบระยะห่างและ health ของศัตรู
+			float distance = Vector3.Distance(transform.position, gloryKillTarget.transform.position);
+			if (distance > 2f) // ระยะ glory kill
+				return;
+			
+			// สมมติมี EnemyStats component
+			EnemyStats enemyStats = gloryKillTarget.GetComponent<EnemyStats>();
+			if (enemyStats == null || enemyStats.currentHealth > enemyStats.maxHealth * 0.2f)
+				return;
+			
+			// ทำ glory kill
+			canMove = false;
+			inAction = true;
+			anim.CrossFade ("GloryKill", 0.1f); // animation ที่รวดเร็ว
+			enemyStats.GloryKill();
+		}
+
 		public void Tick (float d) {
 			delta = d;
 			onGround = OnGround ();
 			anim.SetBool ("onGround", onGround);
+			HandleRolls ();
 		}
 
-		void HangleRolls () {
-			if (!rollInput || usingItem)
+		void HandleRolls () {
+			if (!rollInput)
 				return;
 			float h = vertical;
 			float v = horizontal;

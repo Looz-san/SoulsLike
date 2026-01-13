@@ -1,0 +1,32 @@
+# Normalize line endings and set text files to be handled by git
+* text=auto
+
+# Keep common Unity text formats as text
+*.cs     text
+*.shader text
+*.cginc  text
+*.compute text
+*.hlsl   text
+*.asmdef text
+*.unity  text
+*.prefab text
+*.mat    text
+*.meta   text
+*.txt    text
+*.json   text
+*.xml    text
+*.asmdef text
+
+# Binary assets (keep as binary)
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.tga    binary
+*.psd    binary
+*.fbx    binary
+*.unitypackage binary
+
+# Ensure shell scripts keep LF
+*.sh text eol=lf
+
+# End of file
